@@ -1,0 +1,9 @@
+# Sandbox des agents : réseau coupé à l'exécution, dépôt Maven pré-rempli ici.
+FROM maven:3-eclipse-temurin-21
+RUN useradd -m runner && mkdir -p /m2 /deps && chown runner /m2 /deps
+ENV MAVEN_USER_HOME=/m2 MAVEN_OPTS="-Dmaven.repo.local=/m2/repository"
+USER runner
+COPY --chown=runner . /deps/
+# Un vrai cycle de test télécharge aussi les plugins (surefire, providers JUnit) que go-offline oublie
+RUN cd /deps && sh mvnw -q dependency:go-offline && sh mvnw -q test && rm -rf /deps/* /deps/.mvn
+WORKDIR /work
