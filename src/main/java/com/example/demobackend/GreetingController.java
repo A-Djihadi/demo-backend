@@ -16,14 +16,16 @@ import org.springframework.web.bind.annotation.RestController;
 public class GreetingController {
 
     private final GreetingService greetingService;
+    private final VaultSecretHolder vaultSecretHolder;
 
-    public GreetingController(GreetingService greetingService) {
+    public GreetingController(GreetingService greetingService, VaultSecretHolder vaultSecretHolder) {
         this.greetingService = greetingService;
+        this.vaultSecretHolder = vaultSecretHolder;
     }
 
     @GetMapping("/api/greeting")
     public GreetingResponse greeting(@RequestParam(required = false) @Size(max = 50) String name) {
-        return new GreetingResponse(greetingService.greet(name), false);
+        return new GreetingResponse(greetingService.greet(name), vaultSecretHolder.isLoaded());
     }
 
     @ExceptionHandler(jakarta.validation.ConstraintViolationException.class)
