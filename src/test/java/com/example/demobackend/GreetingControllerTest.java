@@ -4,7 +4,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
+import static org.mockito.Mockito.when;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -17,6 +20,9 @@ class GreetingControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private VaultSecretHolder vaultSecretHolder;
 
     @Test
     void renvoieLeMessageAvecLeNom() throws Exception {
@@ -37,6 +43,15 @@ class GreetingControllerTest {
     void refuseUnNomTropLong() throws Exception {
         mockMvc.perform(get("/api/greeting").param("name", "a".repeat(51)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void indiqueLeSecretChargeQuandVaultLaFourni() throws Exception {
+        when(vaultSecretHolder.isLoaded()).thenReturn(true);
+
+        mockMvc.perform(get("/api/greeting").param("name", "Ana"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.secretLoaded").value(true));
     }
 
     @Test
